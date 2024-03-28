@@ -385,6 +385,49 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
   return 0;
 }
 
+// given a pgdir, find a page with pte_p set and pte_a unset
+// might have to change the return type 
+pte_t* victim_page(pde_t *pgdir)
+{ pte_t *pgtab;
+pde_t *pde;
+ pte_t *victim;
+  for(int i=0; i<1024; i++)
+  { pde = &pgdir[i];
+    if(*pde & PTE_P)
+  {
+     pgtab = (pte_t*)P2V(PTE_ADDR(*pde));
+     for(int j=0; j<1024; j++)
+     {
+      victim=&pgtab[j];
+      if((*victim & PTE_P) && !(*victim & PTE_A))
+      return victim;
+     }
+
+  }
+  }
+  return 0;// no unaccesed pages
+}
+
+void unacc_proc(pde_t *pgdir)
+{ pte_t *pgtab;
+pde_t *pde;
+int counter=0;
+  for(int i=0; i<1024; i++)
+  { pde = &pgdir[i];
+    if(*pde & PTE_P)
+  {
+    counter++;
+    if(counter==10)
+    {
+      counter=0;
+      *pde= *pde & (~PTE_A);
+    }
+  }
+  }
+}
+
+
+
 //PAGEBREAK!
 // Blank page.
 //PAGEBREAK!

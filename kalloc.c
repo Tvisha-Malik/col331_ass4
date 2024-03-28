@@ -93,6 +93,10 @@ kalloc(void)
   if(kmem.use_lock)
     acquire(&kmem.lock);
   r = kmem.freelist;
+  if(kmem.num_free_pages<=1)
+  {// swapp out then
+
+  }
   if(r)
   {
     kmem.freelist = r->next;

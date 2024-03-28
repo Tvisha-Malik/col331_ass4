@@ -326,6 +326,7 @@ void print_rss()
   release(&ptable.lock);
 }
 
+
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
@@ -547,3 +548,18 @@ procdump(void)
     cprintf("\n");
   }
 }
+// returns the victim proc
+struct proc * victim_proc()
+{
+struct proc *p = 0;
+struct proc *vict=p;
+for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  {
+    if((p->state == UNUSED))
+      continue;
+    if((p->rss > vict->rss )|| ((p->rss == vict->rss ) && (p->pid < vict->pid)))
+    vict=p;
+  }
+  return vict;
+}
+
