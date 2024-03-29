@@ -387,10 +387,12 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 
 // given a pgdir, find a page with pte_p set and pte_a unset
 // might have to change the return type 
-pte_t* victim_page(pde_t *pgdir)
-{ pte_t *pgtab;
+struct victim_page find_victim_page(pde_t *pgdir)
+{ 
+  pte_t *pgtab;
 pde_t *pde;
  pte_t *victim;
+ struct victim_page vp={0,0,0};
   for(int i=0; i<1024; i++)
   { pde = &pgdir[i];
     if(*pde & PTE_P)
@@ -400,12 +402,18 @@ pde_t *pde;
      {
       victim=&pgtab[j];
       if((*victim & PTE_P) && !(*victim & PTE_A))
-      return victim;
+      {
+        vp.available=1;
+        vp.pt_entry=victim;
+        vp.va_start=(i<<22)|(j<<12);
+        return vp;
+        }
      }
-
   }
   }
-  return 0;// no unaccesed pages
+  // *va_start=-1;
+  // return 0;// no unaccesed pages
+  return vp;
 }
 
 void unacc_proc(pde_t *pgdir)

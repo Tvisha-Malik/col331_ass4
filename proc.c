@@ -563,3 +563,13 @@ for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   return vict;
 }
 
+void unaccessed (void)
+{struct proc *p = 0;
+for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  {
+    if((p->state == UNUSED))
+      continue;
+      unacc_proc(p->pgdir);
+  }
+}
+
