@@ -23,9 +23,9 @@ void swap_out(void)
         unaccessed();
         v_page= find_victim_page(v_proc->pgdir);
     }
-    uint block= swap_block();
-    int dev = swap_block_dev();
-    swap_out_page(v_page, block,dev);
+    // uint block= swap_block();
+    // int dev = swap_block_dev();
+    swap_out_page(v_page, 0,0);
 }
 
 void swap_out_page(struct victim_page vp, uint blockno, int dev)
@@ -34,13 +34,13 @@ void swap_out_page(struct victim_page vp, uint blockno, int dev)
     for(int i=0; i<8; i++, va+= BSIZE)
     {
         struct buf *to = bread(dev, blockno+i);
-         memmove(to->data, va, BSIZE);
+         memmove(to->data, (char *)va, BSIZE);
         bwrite(to);
          brelse(to);
     }
     *vp.pt_entry=((blockno<< 12)|PTE_FLAGS(*vp.pt_entry)|PTE_SO)&(~PTE_P);// setting the top 20 bits as the block number, setting the present bit as unset and the swapped out bit as set
     invlpg((void*)va);// invalidating the tlb entry
-    kfree(va);// frees the page in memory
+    kfree((char *)va);// frees the page in memory
 }
 
 
