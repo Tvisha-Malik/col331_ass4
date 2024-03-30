@@ -95,6 +95,7 @@ kalloc(void)
   r = kmem.freelist;
   if(kmem.num_free_pages<=1)
   {// swapp out then
+  swap_out();// finds the victim proc and page, swaps it out
 
   }
   if(r)

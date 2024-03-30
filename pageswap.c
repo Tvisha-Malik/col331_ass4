@@ -5,11 +5,25 @@
 // a function to swap in a page
 #include "mmu.h"
 #include "types.h"
+#include "proc.h"
 #include "buf.h"
 #include "defs.h"
 #include "fs.h"
+void swap_out(void)
+{
+    struct proc* v_proc= victim_proc();
+    struct victim_page v_page= find_victim_page(v_proc->pgdir);
+    if(v_page.available==0)
+    {
+        unaccessed();
+        v_page= find_victim_page(v_proc->pgdir);
+    }
+    uint block= swap_block();
+    int dev = swap_block_dev();
+    swap_out_page(v_page, block,dev);
+}
 
-void swap_out(struct victim_page vp, uint blockno, int dev)
+void swap_out_page(struct victim_page vp, uint blockno, int dev)
 {
     uint va=vp.va_start;
     for(int i=0; i<8; i++, va+= BSIZE)
