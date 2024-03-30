@@ -3,12 +3,17 @@
 // a function to set 10% of the accessed pages as unaccesed (in proc.c)
 // a function to swap out the page , we have the victim page, not swap it out (here)
 // a function to swap in a page
-#include "mmu.h"
+#include "param.h"
 #include "types.h"
-#include "proc.h"
-#include "buf.h"
 #include "defs.h"
+#include "mmu.h"
+#include "proc.h"
+#include "spinlock.h"
+#include "sleeplock.h"
 #include "fs.h"
+#include "buf.h"
+#include "x86.h"
+
 void swap_out(void)
 {
     struct proc* v_proc= victim_proc();

@@ -93,6 +93,10 @@ void            end_op();
 extern int      ismp;
 void            mpinit(void);
 
+//pageswap.c
+void swap_out(void);
+void swap_out_page(struct victim_page, uint blockno, int dev);
+
 // picirq.c
 void            picenable(int);
 void            picinit(void);

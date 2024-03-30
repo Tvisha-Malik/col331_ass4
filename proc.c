@@ -555,7 +555,7 @@ struct proc *p = 0;
 struct proc *vict=p;
 for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
-    if((p->state == UNUSED))
+    if(p->state == UNUSED)
       continue;
     if((p->rss > vict->rss )|| ((p->rss == vict->rss ) && (p->pid < vict->pid)))
     vict=p;
@@ -567,9 +567,9 @@ void unaccessed (void)
 {struct proc *p = 0;
 for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
-    if((p->state == UNUSED))
+    if(p->state == UNUSED)
       continue;
-      unacc_proc(p->pgdir);
+    unacc_proc(p->pgdir);
   }
 }
 
