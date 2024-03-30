@@ -16,6 +16,8 @@ struct superblock {
   uint nblocks;      // Number of data blocks
   uint ninodes;      // Number of inodes.
   uint nlog;         // Number of log blocks
+  uint nswap;        // Number of swap blocks
+  uint swapstart;    // Block number of first swap slot block
   uint logstart;     // Block number of first log block
   uint inodestart;   // Block number of first inode block
   uint bmapstart;    // Block number of first free map block
@@ -55,3 +57,10 @@ struct dirent {
   char name[DIRSIZ];
 };
 
+// represents eight consecutive disk blocks to store a page
+struct swap_slot {
+  uint dev;           // Device number
+  uint start; 	   // Start block number
+  int page_perm;
+  int is_free;
+};

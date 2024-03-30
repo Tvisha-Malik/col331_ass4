@@ -10,18 +10,22 @@
 #include "fs.h"
 #include "stat.h"
 #include "param.h"
-
+#include "mmu.h"
 #ifndef static_assert
 #define static_assert(a, b) do { switch (0) case 0: case (a): ; } while (0)
 #endif
 
 #define NINODES 200
 
+#define NSWAPSLOTS 1000 // 4MB of total swap space
+#define SWAPSIZE (PGSIZE / BSIZE); // Size of one swap slot, 4096/512 = 8
+
 // Disk layout:
-// [ boot block | sb block | log | inode blocks | free bit map | data blocks ]
+// [ boot block | sb block | swap blocks | log | inode blocks | free bit map | data blocks ]
 
 int nbitmap = FSSIZE/(BSIZE*8) + 1;
 int ninodeblocks = NINODES / IPB + 1;
+int nswapblocks = NSWAPSLOTS * SWAPSIZE; // 1000*8 = 8000
 int nlog = LOGSIZE;
 int nmeta;    // Number of meta blocks (boot, sb, nlog, inode, bitmap)
 int nblocks;  // Number of data blocks
@@ -91,25 +95,30 @@ main(int argc, char *argv[])
   }
 
   // 1 fs block = 1 disk sector
-  nmeta = 2 + nlog + ninodeblocks + nbitmap;
+  nmeta = 2 + nswapblocks +  nlog + ninodeblocks + nbitmap;
   nblocks = FSSIZE - nmeta;
 
+  // Initialize the super block
   sb.size = xint(FSSIZE);
   sb.nblocks = xint(nblocks);
   sb.ninodes = xint(NINODES);
   sb.nlog = xint(nlog);
-  sb.logstart = xint(2);
-  sb.inodestart = xint(2+nlog);
-  sb.bmapstart = xint(2+nlog+ninodeblocks);
+  sb.nswap = xint(nswapblocks);
+  sb.swapstart = xint(2);
+  sb.logstart = xint(2+nswapblocks);
+  sb.inodestart = xint(2+nswapblocks+nlog);
+  sb.bmapstart = xint(2+nswapblocks+nlog+ninodeblocks);
 
-  printf("nmeta %d (boot, super, log blocks %u inode blocks %u, bitmap blocks %u) blocks %d total %d\n",
-         nmeta, nlog, ninodeblocks, nbitmap, nblocks, FSSIZE);
+  printf("nmeta %d (boot, super, swap blocks %u log blocks %u inode blocks %u, bitmap blocks %u) blocks %d total %d\n",
+         nmeta, nswapblocks, nlog, ninodeblocks, nbitmap, nblocks, FSSIZE);
 
   freeblock = nmeta;     // the first free block that we can allocate
 
+  // Initialize all blocks as zero
   for(i = 0; i < FSSIZE; i++)
     wsect(i, zeroes);
 
+  // Write the super block
   memset(buf, 0, sizeof(buf));
   memmove(buf, &sb, sizeof(sb));
   wsect(1, buf);
