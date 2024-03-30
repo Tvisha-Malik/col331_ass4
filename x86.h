@@ -91,6 +91,11 @@ ltr(ushort sel)
   asm volatile("ltr %0" : : "r" (sel));
 }
 
+static inline void invlpg(void *addr)
+{
+    asm volatile("invlpg (%0)" : : "r" (addr) : "memory");
+}
+
 static inline uint
 readeflags(void)
 {
