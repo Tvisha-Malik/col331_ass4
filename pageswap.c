@@ -14,6 +14,50 @@
 #include "buf.h"
 #include "x86.h"
 
+#define SWAPSIZE (PGSIZE / BSIZE); // Size of one swap slot, 4096/512 = 8
+
+// Global in-memory array storing metadata of swap slots
+struct swap_slot swap_array[NSWAPSLOTS];
+
+
+void swaparrayinit(int dev){
+    for (int i = 0; i < NSWAPSLOTS; i++){
+        swap_array[i].is_free = 1;
+        swap_array[i].start = SWAPSTART + i * SWAPSIZE;
+        swap_array[i].dev = dev;
+    }
+};
+
+struct swap_slot* swapalloc(void){
+    for (int i = 0; i < NSWAPSLOTS; i++){
+        if (swap_array[i].is_free == 1){ // If the slot is free
+            swap_array[i].is_free = 0; // Mark it as used
+            return &swap_array[i];
+        }
+    }
+    panic("swapalloc: out of swap slots");
+};
+
+// void swapfree(struct swap_slot* slot){
+//     if (slot->is_free == 1)
+//         panic("swapfree: slot already free");
+//     slot->is_free = 1;
+// };
+
+void swapfree(int dev, int blockno){
+    for (int i = 0; i < NSWAPSLOTS; i++){
+        struct swap_slot* sw = &swap_array[i];
+        if (sw->start == blockno && sw->dev == dev){
+            if (sw->is_free == 1)
+                panic("swapfree: slot already free");
+            sw->is_free = 1;
+            return;
+        }
+    }
+    panic("swapfree: blockno not found");
+};
+
+
 void swap_out(void)
 {
     struct proc* v_proc= victim_proc();
@@ -23,9 +67,8 @@ void swap_out(void)
         unaccessed();
         v_page= find_victim_page(v_proc->pgdir);
     }
-    // uint block= swap_block();
-    // int dev = swap_block_dev();
-    swap_out_page(v_page, 0,0);
+    struct swap_slot* slot = swapalloc();
+    swap_out_page(v_page, slot->start, slot->dev);
 }
 
 void swap_out_page(struct victim_page vp, uint blockno, int dev)

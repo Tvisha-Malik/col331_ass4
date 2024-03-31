@@ -17,7 +17,6 @@
 
 #define NINODES 200
 
-#define NSWAPSLOTS 1000 // 4MB of total swap space
 #define SWAPSIZE (PGSIZE / BSIZE); // Size of one swap slot, 4096/512 = 8
 
 // Disk layout:
@@ -25,7 +24,7 @@
 
 int nbitmap = FSSIZE/(BSIZE*8) + 1;
 int ninodeblocks = NINODES / IPB + 1;
-int nswapblocks = NSWAPSLOTS * SWAPSIZE; // 1000*8 = 8000
+int nswapblocks = NSWAPSLOTS * SWAPSIZE; // 256*8 = 2048
 int nlog = LOGSIZE;
 int nmeta;    // Number of meta blocks (boot, sb, nlog, inode, bitmap)
 int nblocks;  // Number of data blocks

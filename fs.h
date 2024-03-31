@@ -64,3 +64,4 @@ struct swap_slot {
   int page_perm;
   int is_free;
 };
+#define SWAPSTART 2 // Block number of first swap slot block

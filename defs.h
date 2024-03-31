@@ -94,8 +94,12 @@ extern int      ismp;
 void            mpinit(void);
 
 //pageswap.c
+
+void swaparrayinit(int);
+struct swap_slot* swapalloc(void);
+void swapfree(int, int);
 void swap_out(void);
-void swap_out_page(struct victim_page, uint blockno, int dev);
+void swap_out_page(struct victim_page, uint, int);
 
 // picirq.c
 void            picenable(int);
