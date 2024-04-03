@@ -57,6 +57,17 @@ void swapfree(int dev, int blockno){
     panic("swapfree: blockno not found");
 };
 
+void clean_slots(int pid)
+{
+
+     for (int i = 0; i < NSWAPSLOTS; i++){
+        struct swap_slot* sw = &swap_array[i];
+        if (sw->pid=pid && sw->is_free == 0){
+            sw->is_free = 1;
+            return;
+        }
+    }
+}
 
 void swap_out(void)
 {
@@ -64,7 +75,8 @@ void swap_out(void)
     struct victim_page v_page= find_victim_page(v_proc->pgdir);
     if(v_page.available==0)
     {
-        unaccessed();
+        //unaccessed(); we only have to set 10% of the accessed entries as unaccesed for the victim process
+         unacc_proc(v_proc->pgdir);
         v_page= find_victim_page(v_proc->pgdir);
     }
     struct swap_slot* slot = swapalloc();
