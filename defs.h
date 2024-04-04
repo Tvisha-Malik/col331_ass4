@@ -100,6 +100,7 @@ struct swap_slot* swapalloc(void);
 void swapfree(int, int);
 void swap_out(void);
 void swap_out_page(struct victim_page, uint, int);
+void swap_in_page();
 
 // picirq.c
 void            picenable(int);

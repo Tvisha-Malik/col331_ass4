@@ -56,6 +56,10 @@ trap(struct trapframe *tf)
     }
     lapiceoi();
     break;
+  case T_PGFLT:
+    swap_in_page();
+    lapiceoi();
+    break;
   case T_IRQ0 + IRQ_IDE:
     ideintr();
     lapiceoi();

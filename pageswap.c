@@ -86,4 +86,41 @@ void swap_out_page(struct victim_page vp, uint blockno, int dev)
     kfree((char *)va);// frees the page in memory
 }
 
+void swap_in_page(){
+    uint vpage = rcr2();
+    struct proc* p=myproc();
+    /* from vm.c*/
+    pte_t*  pgdir_adr =  walkpgdir(p->pgdir, (char*) vpage,0);
+    if(!pgdir_adr || !(*pgdir_adr & PTE_P)){
+        panic("Invalid page falut");
+        return;
+    }
+    uint block_id = (*pgdir_adr>>12);
+    char* phy_page = kalloc();
+    if(phy_page==0){
+        panic("Failed to allocate memory for swapped in page");
+        return;
+    }
+    disk_read(ROOTDEV,phy_page,(int)block_id);
+    int cal_slot = (block_id-2)/8;
+    struct swap_slot get_slot = swap_array[cal_slot];
+    *pgdir_adr |= get_slot.page_perm;
+    p->rss ++;
+    *pgdir_adr |=(*phy_page & 0xFFFFF000);
+    *pgdir_adr |= PTE_P;
+}
+void disk_read(uint dev, char *page, int block){
+    struct buf* buffer;
+    int page_block;
+    int part_block;
+    //512 size
+    for(int i=0;i<8;i++){
+        part_block=512*i;
+        page_block = block+i;
+        buffer = bread(dev,page_block);
+        memmove(page+part_block,buffer->data,512);
+        brelse(buffer);
+    }
+}
+
 
