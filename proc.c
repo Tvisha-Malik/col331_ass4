@@ -286,7 +286,9 @@ wait(void)
       havekids = 1;
       if(p->state == ZOMBIE){
         // Found one.
+        // also free the slots
         pid = p->pid;
+        clean_slots(pid);// to clean up the slots of the killed process
         kfree(p->kstack);
         p->kstack = 0;
         freevm(p->pgdir);
