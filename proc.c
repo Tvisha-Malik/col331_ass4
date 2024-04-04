@@ -288,7 +288,7 @@ wait(void)
         // Found one.
         // also free the slots
         pid = p->pid;
-        clean_slots(pid);// to clean up the slots of the killed process
+        //clean_slots(pid);// to clean up the slots of the killed process
         kfree(p->kstack);
         p->kstack = 0;
         freevm(p->pgdir);
@@ -560,8 +560,12 @@ for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == UNUSED)
       continue;
     if((p->rss > vict->rss )|| ((p->rss == vict->rss ) && (p->pid < vict->pid)))
-    vict=p;
+    {
+      // vict->rss--;// to change the rss of the victim process
+      return vict;
+    }
   }
+ panic("no victim process found");
   return vict;
 }
 

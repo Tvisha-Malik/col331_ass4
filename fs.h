@@ -63,6 +63,6 @@ struct swap_slot {
   uint start; 	   // Start block number
   int page_perm;
   int is_free;
-  int pid;// for cleaning up the swap slots after process ends
+ // int pid;// for cleaning up the swap slots after process ends
 };
 #define SWAPSTART 2 // Block number of first swap slot block

@@ -8,6 +8,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "spinlock.h"
+#include "proc.h"
 
 void freerange(void *vstart, void *vend);
 extern char end[]; // first address after kernel loaded from ELF file
@@ -78,6 +79,7 @@ kfree(char *v)
   r->next = kmem.freelist;
   kmem.num_free_pages+=1;
   kmem.freelist = r;
+  myproc()->rss--;
   if(kmem.use_lock)
     release(&kmem.lock);
 }
@@ -96,12 +98,13 @@ kalloc(void)
   if(kmem.num_free_pages<=1)
   {// swapp out then
   swap_out();// finds the victim proc and page, swaps it out
-
   }
   if(r)
   {
     kmem.freelist = r->next;
     kmem.num_free_pages-=1;
+    myproc()->rss++;// kallocing an new page in phy memory
+
   }
     
   if(kmem.use_lock)

@@ -57,18 +57,6 @@ void swapfree(int dev, int blockno){
     panic("swapfree: blockno not found");
 };
 
-void clean_slots(int pid)
-{
-
-     for (int i = 0; i < NSWAPSLOTS; i++){
-        struct swap_slot* sw = &swap_array[i];
-        if (sw->pid=pid && sw->is_free == 0){
-            sw->is_free = 1;
-            return;
-        }
-    }
-}
-
 void swap_out(void)
 {
     struct proc* v_proc= victim_proc();
@@ -79,6 +67,7 @@ void swap_out(void)
          unacc_proc(v_proc->pgdir);
         v_page= find_victim_page(v_proc->pgdir);
     }
+    v_proc->rss--;// as its page is swapped out
     struct swap_slot* slot = swapalloc();
     swap_out_page(v_page, slot->start, slot->dev);
 }
