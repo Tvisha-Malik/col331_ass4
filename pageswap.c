@@ -13,6 +13,7 @@
 #include "fs.h"
 #include "buf.h"
 #include "x86.h"
+#include "memlayout.h"
 
 
 #define SWAPSIZE (PGSIZE / BSIZE); // Size of one swap slot, 4096/512 = 8
@@ -61,15 +62,21 @@ void swapfree(int dev, int blockno){
 void swap_out(void)
 {
     struct proc* v_proc= victim_proc();
+     cprintf("after victim proc in swapout \n");
     struct victim_page v_page= find_victim_page(v_proc->pgdir);
+     cprintf("before if in swapout \n");
     if(v_page.available==0)
     {
         //unaccessed(); we only have to set 10% of the accessed entries as unaccesed for the victim process
          unacc_proc(v_proc->pgdir);
         v_page= find_victim_page(v_proc->pgdir);
     }
+       cprintf("after if in swapout \n");
+    // if(v_page.available==0)
+    // panic("still cant find victim page \n");
     v_proc->rss--;// as its page is swapped out
     struct swap_slot* slot = swapalloc();
+   cprintf("after swapalloc in swap out \n");
     swap_out_page(v_page, slot->start, slot->dev);
 }
 
@@ -78,15 +85,22 @@ void swap_out_page(struct victim_page vp, uint blockno, int dev)
     uint va=vp.va_start;
     for(int i=0; i<8; i++, va+= BSIZE)
     {
+       
         struct buf *to = bread(dev, blockno+i);
+         cprintf("inside the swap out page loop %d \n", i);
          memmove(to->data, (char *)va, BSIZE);
         bwrite(to);
          brelse(to);
+
     }
     *vp.pt_entry=((blockno<< 12)|PTE_FLAGS(*vp.pt_entry)|PTE_SO)&(~PTE_P);// setting the top 20 bits as the block number, setting the present bit as unset and the swapped out bit as set
-    invlpg((void*)va);// invalidating the tlb entry
+    // invlpg((void*)va);// invalidating the tlb entry
     //rss proc set in swap out
+    cprintf("before lcr3 \n");
+     lcr3(V2P(myproc()->pgdir));
+     cprintf("after lcr3 \n");
     kfree((char *)va);// frees the page in memory but the rrs has already been decreased so no need to decrease here
+
 }
 void disk_read(uint dev, char *page, int block){
     struct buf* buffer;

@@ -33,6 +33,8 @@ struct {
 void
 kinit1(void *vstart, void *vend)
 {
+   
+
   initlock(&kmem.lock, "kmem");
   kmem.use_lock = 0;
   freerange(vstart, vend);
@@ -41,6 +43,7 @@ kinit1(void *vstart, void *vend)
 void
 kinit2(void *vstart, void *vend)
 {
+  cprintf("going inside kinit1 %d \n ", kmem.num_free_pages);
   freerange(vstart, vend);
   kmem.use_lock = 1;
 }
@@ -48,6 +51,7 @@ kinit2(void *vstart, void *vend)
 void
 freerange(void *vstart, void *vend)
 {
+   cprintf("initially %d \n ", kmem.num_free_pages);
   char *p;
   p = (char*)PGROUNDUP((uint)vstart);
   for(; p + PGSIZE <= (char*)vend; p += PGSIZE)
@@ -94,8 +98,10 @@ kalloc(void)
   if(kmem.use_lock)
     acquire(&kmem.lock);
   r = kmem.freelist;
-  if(kmem.num_free_pages<=1)
+  // cprintf("going inside kalloc %d \n ", kmem.num_free_pages);
+  if(kmem.num_free_pages<=800)
   {// swapp out then
+  cprintf("before swapout \n");
   swap_out();// finds the victim proc and page, swaps it out
   }
   if(r)

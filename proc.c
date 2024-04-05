@@ -401,7 +401,8 @@ sched(void)
   if(!holding(&ptable.lock))
     panic("sched ptable.lock");
   if(mycpu()->ncli != 1)
-    panic("sched locks");
+    {  cprintf("the ncli is %d \n",mycpu()->ncli  );
+      panic("sched locks");}
   if(p->state == RUNNING)
     panic("sched running");
   if(readeflags()&FL_IF)
@@ -573,11 +574,12 @@ for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
       continue;
     if((p->rss > vict->rss )|| ((p->rss == vict->rss ) && (p->pid < vict->pid)))
     {
-     
-      return vict;
+      vict=p;
     }
   }
- panic("no victim process found");
+//    cprintf("no victim proc found in vict proc \n");
+if(p==0)
+panic("no victim process found");
   return vict;
 }
 
