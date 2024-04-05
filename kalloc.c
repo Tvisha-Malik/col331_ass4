@@ -79,7 +79,6 @@ kfree(char *v)
   r->next = kmem.freelist;
   kmem.num_free_pages+=1;
   kmem.freelist = r;
-  myproc()->rss--;
   if(kmem.use_lock)
     release(&kmem.lock);
 }
@@ -103,7 +102,6 @@ kalloc(void)
   {
     kmem.freelist = r->next;
     kmem.num_free_pages-=1;
-    myproc()->rss++;// kallocing an new page in phy memory
 
   }
     

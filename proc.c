@@ -88,6 +88,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->rss=0;
 
   release(&ptable.lock);
 
@@ -96,6 +97,7 @@ found:
     p->state = UNUSED;
     return 0;
   }
+  p->rss+=PGSIZE;// because of the above kalloc
   sp = p->kstack + KSTACKSIZE;
 
   // Leave room for trap frame.
@@ -123,12 +125,16 @@ userinit(void)
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
 
-  p = allocproc();
-  
+  p = allocproc();// sets up kstack, rss updated for it
+  //one page
   initproc = p;
-  if((p->pgdir = setupkvm()) == 0)
+  if((p->pgdir = setupkvm()) == 0)// one kalloc thus rss++
     panic("userinit: out of memory?");
+  p->rss+=PGSIZE;// for the page directory
+  // 2 pages in memory
   inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
+  p->rss+=2*PGSIZE;// one due to the code and the other one is the page table
+  // total 4 pages in memory- page table, page directory, one page for the code and kernel stack
   p->sz = PGSIZE;
   memset(p->tf, 0, sizeof(*p->tf));
   p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
@@ -162,6 +168,7 @@ growproc(int n)
   struct proc *curproc = myproc();
 
   sz = curproc->sz;
+  
   if(n > 0){
     if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
       return -1;
@@ -170,6 +177,7 @@ growproc(int n)
       return -1;
   }
   curproc->sz = sz;
+  curproc->rss+=(PGROUNDUP(sz+n)-PGROUNDUP(sz))*PGSIZE;
   switchuvm(curproc);
   return 0;
 }
@@ -191,11 +199,14 @@ fork(void)
 
   // Copy process state from proc.
   if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
-    kfree(np->kstack);
+    kfree(np->kstack);// incase of error
     np->kstack = 0;
     np->state = UNUSED;
     return -1;
   }
+  // assuming all the pages of this process will be in memory
+  // this includes the page directory (already considered)
+  // the page tables corresponding to the pages
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
@@ -211,6 +222,7 @@ fork(void)
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
   pid = np->pid;
+  np->rss=curproc->rss;// setting the rss of the child same as the rss of the parent
 
   acquire(&ptable.lock);
 
@@ -557,11 +569,11 @@ struct proc *p = 0;
 struct proc *vict=p;
 for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
-    if(p->state == UNUSED)
+    if(p->state == UNUSED) // only runnable and running processes can be choosen as victim
       continue;
     if((p->rss > vict->rss )|| ((p->rss == vict->rss ) && (p->pid < vict->pid)))
     {
-      // vict->rss--;// to change the rss of the victim process
+     
       return vict;
     }
   }
@@ -569,13 +581,13 @@ for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   return vict;
 }
 
-void unaccessed (void)
-{struct proc *p = 0;
-for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-  {
-    if(p->state == UNUSED)
-      continue;
-    unacc_proc(p->pgdir);
-  }
-}
+// void unaccessed (void)
+// {struct proc *p = 0;
+// for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+//   {
+//     if(p->state == UNUSED)
+//       continue;
+//     unacc_proc(p->pgdir);
+//   }
+// }
 

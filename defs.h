@@ -137,7 +137,6 @@ void            wakeup(void*);
 void            yield(void);
 void             print_rss(void);
 struct proc*    victim_proc(void);
-void             unaccessed (void);
 
 // swtch.S
 void            swtch(struct context**, struct context*);
@@ -205,6 +204,7 @@ int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
 struct victim_page   find_victim_page(pde_t*);
 void            unacc_proc(pde_t *);
+ pte_t *   walkpgdir(pde_t *, const void *, int );
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
