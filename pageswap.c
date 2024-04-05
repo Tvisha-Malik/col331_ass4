@@ -109,6 +109,7 @@ void swap_in_page(){
     p->rss ++;
     *pgdir_adr |=(*phy_page & 0xFFFFF000);
     *pgdir_adr |= PTE_P;
+    swap_free(ROOTDEV,block_id);
 }
 void disk_read(uint dev, char *page, int block){
     struct buf* buffer;
