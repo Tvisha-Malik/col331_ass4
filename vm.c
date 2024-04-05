@@ -31,7 +31,8 @@ void seginit(void)
 // Return the address of the PTE in page table pgdir
 // that corresponds to virtual address va.  If alloc!=0,
 // create any required page table pages.
-static pte_t *
+// static
+ pte_t *
 walkpgdir(pde_t *pgdir, const void *va, int alloc)
 {
   pde_t *pde;
@@ -245,7 +246,6 @@ int allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
     {
       cprintf("allocuvm out of memory (2)\n");// in case of error
       deallocuvm(pgdir, newsz, oldsz);
-      set_rss_proc(0);
       kfree(mem);
       return 0;
     }
@@ -344,7 +344,7 @@ copyuvm(pde_t *pgdir, uint sz)
     memmove(mem, (char *)P2V(pa), PGSIZE);// copy the page data
     if (mappages(d, (void *)i, PGSIZE, V2P(mem), flags) < 0)// add the entries in page directory and page table
     { //page table pages allocated if necessary
-    set_rss_proc(0);
+
       kfree(mem);
       goto bad;
     }

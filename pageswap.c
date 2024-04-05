@@ -14,6 +14,7 @@
 #include "buf.h"
 #include "x86.h"
 
+
 #define SWAPSIZE (PGSIZE / BSIZE); // Size of one swap slot, 4096/512 = 8
 
 // Global in-memory array storing metadata of swap slots
@@ -87,7 +88,19 @@ void swap_out_page(struct victim_page vp, uint blockno, int dev)
     //rss proc set in swap out
     kfree((char *)va);// frees the page in memory but the rrs has already been decreased so no need to decrease here
 }
-
+void disk_read(uint dev, char *page, int block){
+    struct buf* buffer;
+    int page_block;
+    int part_block;
+    //512 size
+    for(int i=0;i<8;i++){
+        part_block=512*i;
+        page_block = block+i;
+        buffer = bread(dev,page_block);
+        memmove(page+part_block,buffer->data,512);
+        brelse(buffer);
+    }
+}
 void swap_in_page(){
     uint vpage = rcr2();
     struct proc* p=myproc();
@@ -112,18 +125,6 @@ void swap_in_page(){
     *pgdir_adr |= PTE_P;
     swapfree(ROOTDEV,block_id);
 }
-void disk_read(uint dev, char *page, int block){
-    struct buf* buffer;
-    int page_block;
-    int part_block;
-    //512 size
-    for(int i=0;i<8;i++){
-        part_block=512*i;
-        page_block = block+i;
-        buffer = bread(dev,page_block);
-        memmove(page+part_block,buffer->data,512);
-        brelse(buffer);
-    }
-}
+
 
 
