@@ -13,6 +13,10 @@
 #include "fs.h"
 #include "buf.h"
 #include "x86.h"
+#include "elf.h"
+
+#include "memlayout.h"
+
 
 #define SWAPSIZE (PGSIZE / BSIZE); // Size of one swap slot, 4096/512 = 8
 
@@ -86,12 +90,50 @@ void swap_out_page(struct victim_page vp, uint blockno, int dev)
     invlpg((void*)va);// invalidating the tlb entry
     kfree((char *)va);// frees the page in memory
 }
+pte_t *
+walkpgdir_new(pde_t *pgdir, const void *va, int alloc)
+{
+  pde_t *pde;
+  pte_t *pgtab;
+
+  pde = &pgdir[PDX(va)];
+  if (*pde & PTE_P)
+  {
+    pgtab = (pte_t *)P2V(PTE_ADDR(*pde));
+  }
+  else
+  {
+    if (!alloc || (pgtab = (pte_t *)kalloc()) == 0)
+      return 0;
+    // Make sure all those PTE_P bits are zero.
+
+    memset(pgtab, 0, PGSIZE);
+    // The permissions here are overly generous, but they can
+    // be further restricted by the permissions in the page table
+    // entries, if necessary.
+    *pde = V2P(pgtab) | PTE_P | PTE_W | PTE_U;
+  }
+  return &pgtab[PTX(va)];
+}
+void disk_read(uint dev, char *page, int block){
+    struct buf* buffer;
+    int page_block;
+    int part_block;
+    //block size to be 512.
+    for(int i=0;i<8;i++){
+        part_block=512*i;
+        page_block = block+i;
+        buffer = bread(dev,page_block);
+        memmove(page+part_block,buffer->data,512);
+        brelse(buffer);
+    }
+}
 
 void swap_in_page(){
     uint vpage = rcr2();
-    struct proc* p=myproc();
+    struct proc* p = myproc();
     /* from vm.c*/
-    pte_t*  pgdir_adr =  walkpgdir(p->pgdir, (char*) vpage,0);
+    pte_t*  pgdir_adr =  walkpgdir_new(p->pgdir, (char*) vpage,0);
     if(!pgdir_adr || !(*pgdir_adr & PTE_P)){
         panic("Invalid page falut");
         return;
@@ -109,20 +151,8 @@ void swap_in_page(){
     p->rss ++;
     *pgdir_adr |=(*phy_page & 0xFFFFF000);
     *pgdir_adr |= PTE_P;
-    swap_free(ROOTDEV,block_id);
+    swapfree(ROOTDEV,block_id);
 }
-void disk_read(uint dev, char *page, int block){
-    struct buf* buffer;
-    int page_block;
-    int part_block;
-    //512 size
-    for(int i=0;i<8;i++){
-        part_block=512*i;
-        page_block = block+i;
-        buffer = bread(dev,page_block);
-        memmove(page+part_block,buffer->data,512);
-        brelse(buffer);
-    }
-}
+
 
 
