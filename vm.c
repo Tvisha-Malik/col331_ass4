@@ -418,7 +418,8 @@ struct victim_page find_victim_page(pde_t *pgdir)
         {
           vp.available = 1;
           vp.pt_entry = victim;
-          vp.va_start = (i << 22) | (j << 12);
+          // vp.va_start = (i << 22) | (j << 12);
+					vp.va_start = (char*) P2V(PTE_ADDR(*victim));
           return vp;
         }
       }

@@ -82,7 +82,7 @@ void swap_out(void)
 
 void swap_out_page(struct victim_page vp, uint blockno, int dev)
 {
-    uint va=vp.va_start;
+    char* va=vp.va_start;
     for(int i=0; i<8; i++, va+= BSIZE)
     {
         cprintf("inside the swap out page loop %d \n", i);
@@ -99,7 +99,8 @@ void swap_out_page(struct victim_page vp, uint blockno, int dev)
     cprintf("before lcr3 \n");
      lcr3(V2P(myproc()->pgdir));
      cprintf("after lcr3 \n");
-    kfree((char *)va);// frees the page in memory but the rrs has already been decreased so no need to decrease here
+	cprintf("printing va: %d\n", va);
+    kfree(va);// frees the page in memory but the rrs has already been decreased so no need to decrease here
 
 }
 void disk_read(uint dev, char *page, int block){

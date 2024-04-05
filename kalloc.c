@@ -94,16 +94,16 @@ char*
 kalloc(void)
 {
   struct run *r;
-
-  if(kmem.use_lock)
-    acquire(&kmem.lock);
-  r = kmem.freelist;
-  // cprintf("going inside kalloc %d \n ", kmem.num_free_pages);
   if(kmem.num_free_pages<=1000)
   {// swapp out then
   cprintf("before swapout \n");
   swap_out();// finds the victim proc and page, swaps it out
   }
+
+  if(kmem.use_lock)
+    acquire(&kmem.lock);
+  r = kmem.freelist;
+  // cprintf("going inside kalloc %d \n ", kmem.num_free_pages);
   if(r)
   {
     kmem.freelist = r->next;
