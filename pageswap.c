@@ -85,9 +85,9 @@ void swap_out_page(struct victim_page vp, uint blockno, int dev)
     uint va=vp.va_start;
     for(int i=0; i<8; i++, va+= BSIZE)
     {
-       
+        cprintf("inside the swap out page loop %d \n", i);
         struct buf *to = bread(dev, blockno+i);
-         cprintf("inside the swap out page loop %d \n", i);
+        
          memmove(to->data, (char *)va, BSIZE);
         bwrite(to);
          brelse(to);
