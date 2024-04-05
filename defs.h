@@ -137,7 +137,6 @@ void            wakeup(void*);
 void            yield(void);
 void             print_rss(void);
 struct proc*    victim_proc(void);
-void             unaccessed (void);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

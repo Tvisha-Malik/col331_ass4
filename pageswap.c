@@ -84,7 +84,8 @@ void swap_out_page(struct victim_page vp, uint blockno, int dev)
     }
     *vp.pt_entry=((blockno<< 12)|PTE_FLAGS(*vp.pt_entry)|PTE_SO)&(~PTE_P);// setting the top 20 bits as the block number, setting the present bit as unset and the swapped out bit as set
     invlpg((void*)va);// invalidating the tlb entry
-    kfree((char *)va);// frees the page in memory
+    //rss proc set in swap out
+    kfree((char *)va);// frees the page in memory but the rrs has already been decreased so no need to decrease here
 }
 
 void swap_in_page(){
@@ -106,9 +107,10 @@ void swap_in_page(){
     int cal_slot = (block_id-2)/8;
     struct swap_slot get_slot = swap_array[cal_slot];
     *pgdir_adr |= get_slot.page_perm;
-    p->rss ++;
+    p->rss +=PGSIZE;
     *pgdir_adr |=(*phy_page & 0xFFFFF000);
     *pgdir_adr |= PTE_P;
+    swap_free(ROOTDEV,block_id);
 }
 void disk_read(uint dev, char *page, int block){
     struct buf* buffer;
