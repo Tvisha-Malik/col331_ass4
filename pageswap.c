@@ -107,10 +107,10 @@ void disk_read(uint dev, char *page, int block){
     int part_block;
     //512 size
     for(int i=0;i<8;i++){
-        part_block=512*i;
+        part_block=BSIZE*i;
         page_block = block+i;
         buffer = bread(dev,page_block);
-        memmove(page+part_block,buffer->data,512);
+        memmove(page+part_block,buffer->data,BSIZE);
         brelse(buffer);
     }
 }
@@ -134,8 +134,9 @@ void disk_read(uint dev, char *page, int block){
 
 void swap_in_page(){
     cprintf("inside swap in \n");
-    uint vpage = rcr2();
+    
     struct proc* p=myproc();
+    uint vpage = rcr2();
     /* from vm.c*/
     pte_t*  pgdir_adr =  walkpgdir(p->pgdir, (void*) vpage,0);
 		// cprintf("pgdir_adr: %d\n", pgdir_adr);
@@ -147,20 +148,23 @@ void swap_in_page(){
         panic("Invalid page fault present");
         return;
     }
-    uint block_id = (*pgdir_adr>>12);
+    uint block_id = (*pgdir_adr>>PTXSHIFT);
     char* phy_page = kalloc();
     if(phy_page==0){
         panic("Failed to allocate memory for swapped in page");
         return;
     }
+    p->rss +=PGSIZE;
     disk_read(ROOTDEV,phy_page,(int)block_id);
+
     int cal_slot = (block_id-2)/8;
     struct swap_slot get_slot = swap_array[cal_slot];
     *pgdir_adr |= get_slot.page_perm;
-    p->rss +=PGSIZE;
-    *pgdir_adr |=(*phy_page & 0xFFFFF000);
+    *pgdir_adr |= V2P(phy_page);
     *pgdir_adr |= PTE_P;
-    swapfree(ROOTDEV,block_id);
+    get_slot.is_free = 1;
+    
+    // swapfree(ROOTDEV,block_id);
 }
 
 
