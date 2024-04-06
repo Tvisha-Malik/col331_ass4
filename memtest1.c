@@ -42,7 +42,7 @@ mem(void)
 
 	((int*)m1)[2] = count;
 	total_count = count;
-	// printf(1, "\n\nWhile Loop Over\n");
+	printf(1, "\n\nWhile Loop Over\n");
 
 	count = 0;
 	m1 = start;
@@ -50,7 +50,7 @@ mem(void)
 	while (count != total_count) {
 		if (((int*)m1)[2] != count)
 		{
-			// printf(1, "CurrCount: %d\n", count);
+			printf(1, " second loop CurrCount: %d\n", count);
 			goto failed;
 		}
 		m1 = *(char**)m1;

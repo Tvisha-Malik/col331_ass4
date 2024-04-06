@@ -293,6 +293,7 @@ void freevm(pde_t *pgdir)
   if (pgdir == 0)
     panic("freevm: no pgdir");
   deallocuvm(pgdir, KERNBASE, 0);
+  cprintf("after dealloc \n");
   for (i = 0; i < NPDENTRIES; i++)
   {
     if (pgdir[i] & PTE_P)
@@ -301,6 +302,7 @@ void freevm(pde_t *pgdir)
       kfree(v);
     }
   }
+  cprintf("after loop in freeuvm \n");
   kfree((char *)pgdir);
 }
 
@@ -399,35 +401,46 @@ int copyout(pde_t *pgdir, uint va, void *p, uint len)
 
 // given a pgdir, find a page with pte_p set and pte_a unset
 // might have to change the return type
-struct victim_page find_victim_page(pde_t *pgdir)
+pte_t* find_victim_page(pde_t *pgdir)
 {
   pte_t *pgtab;
   pde_t *pde;
   pte_t *victim;
-  struct victim_page vp = {0, 0, 0};
-  for (int i = 0; i < 1024; i++)
+for(uint i=4096; i<KERNBASE;i+=PGSIZE)
   {
-    pde = &pgdir[i];
+    pde = &pgdir[PDX(i)];
     if (*pde & PTE_P)
     {
       pgtab = (pte_t *)P2V(PTE_ADDR(*pde));
-      for (int j = 0; j < 1024; j++)
-      {
-        victim = &pgtab[j];
+        victim = &pgtab[PTX(i)];
         if ((*victim & PTE_P) && !(*victim & PTE_A) && (*victim & PTE_U))
         {
-          vp.available = 1;
-          vp.pt_entry = victim;
-          // vp.va_start = (i << 22) | (j << 12);
-					vp.va_start = (char*) P2V(PTE_ADDR(*victim));
-          return vp;
+          return victim;
         }
-      }
     }
   }
   // *va_start=-1;
   // return 0;// no unaccesed pages
-  return vp;
+  return 0;
+  //  pte_t *pte;
+  // for(long i=4096; i<KERNBASE;i+=PGSIZE){    //for all pages in the user virtual space
+  // //  cprintf("i wala loop\t");
+  //   if((pte=walkpgdir(pgdir,(char*)i,0))!= 0) //if mapping exists (0 as 3rd argument as we dont want to create mapping if does not exists)
+	// 	  {    // cprintf("walkpgdir successful\t");
+
+  //          if(*pte & PTE_P) //if not dirty, or (present and access bit not set)  --- conditions needs to be checked
+  //          {   if(*pte & ~PTE_A)             //access bit is NOT set.
+  //              {
+  //                 // cprintf("409600\n");
+  //               //*pte = *pte | PTE_A;
+  //                // cprintf("returning victim\n");
+  //                return pte;
+  //              }
+  //          }
+  //     }
+	// }
+  // return 0;
+
 }
 
 void unacc_proc(pde_t *pgdir)

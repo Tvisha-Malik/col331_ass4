@@ -243,6 +243,7 @@ exit(void)
   struct proc *p;
   int fd;
 
+  cprintf("here in exit 1 \n");
   if(curproc == initproc)
     panic("init exiting");
 
@@ -253,7 +254,7 @@ exit(void)
       curproc->ofile[fd] = 0;
     }
   }
-
+ cprintf("here in exit 2 \n");
   begin_op();
   iput(curproc->cwd);
   end_op();
@@ -263,7 +264,7 @@ exit(void)
 
   // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
-
+ cprintf("here in exit 3 \n");
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == curproc){
@@ -272,7 +273,7 @@ exit(void)
         wakeup1(initproc);
     }
   }
-
+ cprintf("here in exit 4 \n");
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
   sched();

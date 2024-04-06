@@ -99,7 +99,7 @@ void swaparrayinit(int);
 struct swap_slot* swapalloc(void);
 void swapfree(int, int);
 void swap_out(void);
-void swap_out_page(struct victim_page, uint, int);
+void swap_out_page(pte_t* , uint, int);
 
 
 
@@ -202,7 +202,7 @@ void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
-struct victim_page   find_victim_page(pde_t*);
+pte_t *   find_victim_page(pde_t*);
 void            unacc_proc(pde_t *);
  pte_t *       walkpgdir(pde_t *, const void *, int);
 

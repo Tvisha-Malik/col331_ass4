@@ -79,18 +79,18 @@ malloc(uint nbytes)
   int i=0; 
   for(p1 = prevp1->s.ptr; i<10; prevp1 = p1, p1 = p1->s.ptr, i++)
   {
-     printf(1,"current p1 %d\n", p1);
-      printf(1,"current freep %d\n", freep);
+    //  printf(1,"current p1 %d\n", p1);
+    //   printf(1,"current freep %d\n", freep);
     if(p1==freep)
     {
-      printf(1,"found freep\n");
+      // printf(1,"found freep\n");
       break;
     }
   }
- printf(1,"here in malloc 2 \n");
+//  printf(1,"here in malloc 2 \n");
   for(p = prevp->s.ptr; ; prevp = p, p = p->s.ptr){
     if(p->s.size >= nunits){
-        printf(1,"selected p %d\n", p1);
+        // printf(1,"selected p %d\n", p1);
       if(p->s.size == nunits)
         prevp->s.ptr = p->s.ptr;
       else {
@@ -99,28 +99,19 @@ malloc(uint nbytes)
         p->s.size = nunits;
       }
       freep = prevp;
-      printf(1,"here in malloc 3 \n");
+      // printf(1,"here in malloc 3 \n");
       return (void*)(p + 1);
     }
    
     if(p == freep)
-     {  printf(1,"here in malloc 6 \n"); 
+     {  
+      // printf(1,"here in malloc 6 \n"); 
       if((p = morecore(nunits)) == 0)
-        {printf(1,"here in malloc 5 \n");
+        {
+          // printf(1,"here in malloc 5 \n");
           return 0;}
-         printf(1,"after morecore \n");
-         prevp1=freep;
-         i=0;
-          for(p1 = prevp1->s.ptr; i<10; prevp1 = p1, p1 = p1->s.ptr, i++)
-  {
-     printf(1,"current after more core p1 %d\n", p1);
-      printf(1,"current freep after more core %d\n", freep);
-    if(p1==freep)
-    {
-      printf(1,"found freep\n");
-      break;
-    }
-  }
+        //  printf(1,"after morecore \n");
+        
 
         
           }

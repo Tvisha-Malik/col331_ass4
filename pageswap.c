@@ -63,42 +63,56 @@ void swap_out(void)
 {
     struct proc* v_proc= victim_proc();
      // cprintf("after victim proc in swapout \n");
-    struct victim_page v_page= find_victim_page(v_proc->pgdir);
+    pte_t* v_page= find_victim_page(v_proc->pgdir);
      // cprintf("before if in swapout \n");
-    if(v_page.available==0)
+    if(v_page==0)
     {
         //unaccessed(); we only have to set 10% of the accessed entries as unaccesed for the victim process
          unacc_proc(v_proc->pgdir);
         v_page= find_victim_page(v_proc->pgdir);
     }
        // cprintf("after if in swapout \n");
-    if(v_page.available==0)
+    if(v_page==0)
     panic("still cant find victim page \n");
-    v_proc->rss--;// as its page is swapped out
+    v_proc->rss-=PGSIZE;// as its page is swapped out
     struct swap_slot* slot = swapalloc();
    // cprintf("after swapalloc in swap out \n");
     swap_out_page(v_page, slot->start, slot->dev);
+     lcr3(V2P(v_proc->pgdir));
 }
 
-void swap_out_page(struct victim_page vp, uint blockno, int dev)
+void swap_out_page(pte_t* vp, uint blockno, int dev)
 {
-    char* va=vp.va_start;
-    for(int i=0; i<8; i++, va+= BSIZE)
+     uint physicalAddress=PTE_ADDR(*vp); 
+    char* va=(char*)P2V(physicalAddress);
+    struct buf* buffer;
+  int ithPartOfPage=0;
+    for(int i=0; i<8; i++)
     {
         // cprintf("inside the swap out page loop %d \n", i);
-        struct buf *to = bread(dev, blockno+i);
+        ithPartOfPage=i*BSIZE;
+    buffer=bread(ROOTDEV,blockno+i);
+        // struct buf *to = bread(dev, blockno+i);
         
-        memmove(to->data, (char *)va, BSIZE);
-        bwrite(to);
-         brelse(to);
+        // memmove(to->data, (char *)va, BSIZE);
+        // bwrite(to);
+        //  brelse(to);
+        memmove(buffer->data,va+ithPartOfPage,BSIZE);   // write 512 bytes to the block
+    bwrite(buffer);
+    brelse(buffer);
 
     }
-    *vp.pt_entry=((blockno<< 12)|PTE_FLAGS(*vp.pt_entry)|PTE_SO)&(~PTE_P);// setting the top 20 bits as the block number, setting the present bit as unset and the swapped out bit as set
+    *vp=((blockno<< 12)|PTE_FLAGS(*vp)|PTE_SO);
+    *vp=*vp&(~PTE_P);// setting the top 20 bits as the block number, setting the present bit as unset and the swapped out bit as set
+    // *vp.pt_entry=(*vp.pt_entry & 0x000000);
+    // *vp.pt_entry=((blockno<< 12)|PTE_SO);
+    // *vp.pt_entry=*vp.pt_entry&(~PTE_P);
     // invlpg((void*)va);// invalidating the tlb entry
     //rss proc set in swap out
-     lcr3(V2P(myproc()->pgdir));
-	cprintf("printing va: %d\n", vp.va_start);
-    kfree(vp.va_start);// frees the page in memory but the rrs has already been decreased so no need to decrease here
+     kfree(P2V(physicalAddress));
+    
+	cprintf("printing va: %d\n", P2V(physicalAddress));
+   // frees the page in memory but the rrs has already been decreased so no need to decrease here
 
 }
 void disk_read(uint dev, char *page, int block){
