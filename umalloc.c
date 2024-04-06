@@ -51,6 +51,7 @@ morecore(uint nu)
 
   if(nu < 4096)
     nu = 4096;
+  printf(1,"sbrk called \n");
   p = sbrk(nu * sizeof(Header));
   if(p == (char*)-1)
     return 0;
@@ -65,14 +66,31 @@ malloc(uint nbytes)
 {
   Header *p, *prevp;
   uint nunits;
-
+  printf(1,"here in malloc 1 \n");
   nunits = (nbytes + sizeof(Header) - 1)/sizeof(Header) + 1;
   if((prevp = freep) == 0){
+     printf(1,"here in malloc 10 \n");
     base.s.ptr = freep = prevp = &base;
     base.s.size = 0;
   }
+ 
+  Header *p1, *prevp1;
+  prevp1=prevp;
+  int i=0; 
+  for(p1 = prevp1->s.ptr; i<10; prevp1 = p1, p1 = p1->s.ptr, i++)
+  {
+     printf(1,"current p1 %d\n", p1);
+      printf(1,"current freep %d\n", freep);
+    if(p1==freep)
+    {
+      printf(1,"found freep\n");
+      break;
+    }
+  }
+ printf(1,"here in malloc 2 \n");
   for(p = prevp->s.ptr; ; prevp = p, p = p->s.ptr){
     if(p->s.size >= nunits){
+        printf(1,"selected p %d\n", p1);
       if(p->s.size == nunits)
         prevp->s.ptr = p->s.ptr;
       else {
@@ -81,10 +99,32 @@ malloc(uint nbytes)
         p->s.size = nunits;
       }
       freep = prevp;
+      printf(1,"here in malloc 3 \n");
       return (void*)(p + 1);
     }
+   
     if(p == freep)
+     {  printf(1,"here in malloc 6 \n"); 
       if((p = morecore(nunits)) == 0)
-        return 0;
+        {printf(1,"here in malloc 5 \n");
+          return 0;}
+         printf(1,"after morecore \n");
+         prevp1=freep;
+         i=0;
+          for(p1 = prevp1->s.ptr; i<10; prevp1 = p1, p1 = p1->s.ptr, i++)
+  {
+     printf(1,"current after more core p1 %d\n", p1);
+      printf(1,"current freep after more core %d\n", freep);
+    if(p1==freep)
+    {
+      printf(1,"found freep\n");
+      break;
+    }
   }
+
+        
+          }
+    //  printf(1,"here in malloc 7 \n");
+  }
+   printf(1,"here in malloc 4 \n");
 }

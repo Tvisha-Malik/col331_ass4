@@ -414,7 +414,7 @@ struct victim_page find_victim_page(pde_t *pgdir)
       for (int j = 0; j < 1024; j++)
       {
         victim = &pgtab[j];
-        if ((*victim & PTE_P) && !(*victim & PTE_A))
+        if ((*victim & PTE_P) && !(*victim & PTE_A) && (*victim & PTE_U))
         {
           vp.available = 1;
           vp.pt_entry = victim;

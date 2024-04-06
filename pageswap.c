@@ -72,8 +72,8 @@ void swap_out(void)
         v_page= find_victim_page(v_proc->pgdir);
     }
        // cprintf("after if in swapout \n");
-    // if(v_page.available==0)
-    // panic("still cant find victim page \n");
+    if(v_page.available==0)
+    panic("still cant find victim page \n");
     v_proc->rss--;// as its page is swapped out
     struct swap_slot* slot = swapalloc();
    // cprintf("after swapalloc in swap out \n");
@@ -88,7 +88,7 @@ void swap_out_page(struct victim_page vp, uint blockno, int dev)
         // cprintf("inside the swap out page loop %d \n", i);
         struct buf *to = bread(dev, blockno+i);
         
-         memmove(to->data, (char *)va, BSIZE);
+        memmove(to->data, (char *)va, BSIZE);
         bwrite(to);
          brelse(to);
 
@@ -96,11 +96,9 @@ void swap_out_page(struct victim_page vp, uint blockno, int dev)
     *vp.pt_entry=((blockno<< 12)|PTE_FLAGS(*vp.pt_entry)|PTE_SO)&(~PTE_P);// setting the top 20 bits as the block number, setting the present bit as unset and the swapped out bit as set
     // invlpg((void*)va);// invalidating the tlb entry
     //rss proc set in swap out
-    // cprintf("before lcr3 \n");
      lcr3(V2P(myproc()->pgdir));
-     // cprintf("after lcr3 \n");
-	// cprintf("printing va: %d\n", va);
-    kfree(va);// frees the page in memory but the rrs has already been decreased so no need to decrease here
+	cprintf("printing va: %d\n", vp.va_start);
+    kfree(vp.va_start);// frees the page in memory but the rrs has already been decreased so no need to decrease here
 
 }
 void disk_read(uint dev, char *page, int block){
@@ -135,6 +133,7 @@ walkpgdir2(pde_t *pgdir, const void *va)
 }
 
 void swap_in_page(){
+    cprintf("inside swap in \n");
     uint vpage = rcr2();
     struct proc* p=myproc();
     /* from vm.c*/
