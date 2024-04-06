@@ -11,5 +11,5 @@
 #define LOGSIZE      (MAXOPBLOCKS*3)  // max data blocks in on-disk log
 #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
 // #define FSSIZE       1000  // size of file system in blocks, 500KB
-#define FSSIZE       4096  // size of file system in blocks, 2MB. Max possible due to 512*8 bit sized single file bitmap
-#define NSWAPSLOTS   256  // Max number of swap slots, total 1MB of total swap space
+#define FSSIZE       4196  // size of file system in blocks, 2MB. Max possible due to 512*8 bit sized single file bitmap
+#define NSWAPSLOTS   356  // Max number of swap slots, total 1MB of total swap space
