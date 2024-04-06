@@ -401,22 +401,22 @@ int copyout(pde_t *pgdir, uint va, void *p, uint len)
 
 // given a pgdir, find a page with pte_p set and pte_a unset
 // might have to change the return type
-pte_t* find_victim_page(pde_t *pgdir)
+pte_t *find_victim_page(pde_t *pgdir)
 {
   pte_t *pgtab;
   pde_t *pde;
   pte_t *victim;
-for(uint i=4096; i<KERNBASE;i+=PGSIZE)
+  for (uint i = 4096; i < KERNBASE; i += PGSIZE)
   {
     pde = &pgdir[PDX(i)];
     if (*pde & PTE_P)
     {
       pgtab = (pte_t *)P2V(PTE_ADDR(*pde));
-        victim = &pgtab[PTX(i)];
-        if ((*victim & PTE_P) && !(*victim & PTE_A) && (*victim & PTE_U))
-        {
-          return victim;
-        }
+      victim = &pgtab[PTX(i)];
+      if ((*victim & PTE_P) && !(*victim & PTE_A) && (*victim & PTE_U))
+      {
+        return victim;
+      }
     }
   }
   // *va_start=-1;
@@ -426,7 +426,7 @@ for(uint i=4096; i<KERNBASE;i+=PGSIZE)
   // for(long i=4096; i<KERNBASE;i+=PGSIZE){    //for all pages in the user virtual space
   // //  cprintf("i wala loop\t");
   //   if((pte=walkpgdir(pgdir,(char*)i,0))!= 0) //if mapping exists (0 as 3rd argument as we dont want to create mapping if does not exists)
-	// 	  {    // cprintf("walkpgdir successful\t");
+  // 	  {    // cprintf("walkpgdir successful\t");
 
   //          if(*pte & PTE_P) //if not dirty, or (present and access bit not set)  --- conditions needs to be checked
   //          {   if(*pte & ~PTE_A)             //access bit is NOT set.
@@ -438,9 +438,8 @@ for(uint i=4096; i<KERNBASE;i+=PGSIZE)
   //              }
   //          }
   //     }
-	// }
+  // }
   // return 0;
-
 }
 
 void unacc_proc(pde_t *pgdir)
@@ -449,19 +448,19 @@ void unacc_proc(pde_t *pgdir)
   pde_t *pde;
   pte_t *victim;
   int counter = 0;
-  for (int i = 0; i < 1024; i++)// go to the page directory entry ie the page table
+  for (int i = 0; i < 1024; i++) // go to the page directory entry ie the page table
   {
     pde = &pgdir[i];
-    if (*pde & PTE_P)// if the directory entry is present,
+    if (*pde & PTE_P) // if the directory entry is present,
     {
-      pgtab = (pte_t *)P2V(PTE_ADDR(*pde));// go to the page table
+      pgtab = (pte_t *)P2V(PTE_ADDR(*pde)); // go to the page table
       for (int j = 0; j < 1024; j++)
       {
-        victim = &pgtab[j];// iterate through the entries in the page table
+        victim = &pgtab[j]; // iterate through the entries in the page table
         if ((*victim & PTE_P) && (*victim & PTE_A)) // if its present and acessed bit is set,
         {
-          counter++;// increase counter
-          if (counter == 10)// unset 10 percent of the pages, that is every 10th page
+          counter++; // increase counter
+          if (counter == 10) // unset 10 percent of the pages, that is every 10th page
           {
             counter = 0;
             *victim = *victim & (~PTE_A);

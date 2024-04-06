@@ -88,7 +88,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-  p->rss=0;
+  p->rss = 0;
 
   release(&ptable.lock);
 
@@ -97,7 +97,7 @@ found:
     p->state = UNUSED;
     return 0;
   }
-  p->rss+=PGSIZE;// because of the above kalloc
+  p->rss += PGSIZE; // because of the above kalloc
   sp = p->kstack + KSTACKSIZE;
 
   // Leave room for trap frame.
@@ -130,10 +130,10 @@ userinit(void)
   initproc = p;
   if((p->pgdir = setupkvm()) == 0)// one kalloc thus rss++
     panic("userinit: out of memory?");
-  p->rss+=PGSIZE;// for the page directory
+  p->rss += PGSIZE; // for the page directory
   // 2 pages in memory
   inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
-  p->rss+=2*PGSIZE;// one due to the code and the other one is the page table
+  p->rss += 2 * PGSIZE; // one due to the code and the other one is the page table
   // total 4 pages in memory- page table, page directory, one page for the code and kernel stack
   p->sz = PGSIZE;
   memset(p->tf, 0, sizeof(*p->tf));
@@ -177,7 +177,7 @@ growproc(int n)
       return -1;
   }
   curproc->sz = sz;
-  curproc->rss+=(PGROUNDUP(sz+n)-PGROUNDUP(sz))*PGSIZE;
+  curproc->rss += (PGROUNDUP(sz + n) - PGROUNDUP(sz)) * PGSIZE;
   switchuvm(curproc);
   return 0;
 }
@@ -199,7 +199,7 @@ fork(void)
 
   // Copy process state from proc.
   if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
-    kfree(np->kstack);// incase of error
+    kfree(np->kstack); // incase of error
     np->kstack = 0;
     np->state = UNUSED;
     return -1;
@@ -222,7 +222,7 @@ fork(void)
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
   pid = np->pid;
-  np->rss=curproc->rss;// setting the rss of the child same as the rss of the parent
+  np->rss = curproc->rss; // setting the rss of the child same as the rss of the parent
 
   acquire(&ptable.lock);
 
@@ -254,7 +254,7 @@ exit(void)
       curproc->ofile[fd] = 0;
     }
   }
- cprintf("here in exit 2 \n");
+  cprintf("here in exit 2 \n");
   begin_op();
   iput(curproc->cwd);
   end_op();
@@ -264,7 +264,7 @@ exit(void)
 
   // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
- cprintf("here in exit 3 \n");
+  cprintf("here in exit 3 \n");
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == curproc){
@@ -273,7 +273,7 @@ exit(void)
         wakeup1(initproc);
     }
   }
- cprintf("here in exit 4 \n");
+  cprintf("here in exit 4 \n");
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
   sched();
@@ -341,7 +341,6 @@ void print_rss()
   release(&ptable.lock);
 }
 
-
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
@@ -402,8 +401,10 @@ sched(void)
   if(!holding(&ptable.lock))
     panic("sched ptable.lock");
   if(mycpu()->ncli != 1)
-    {  cprintf("the ncli is %d \n",mycpu()->ncli  );
-      panic("sched locks");}
+  {
+    cprintf("the ncli is %d \n", mycpu()->ncli);
+    panic("sched locks");
+  }
   if(p->state == RUNNING)
     panic("sched running");
   if(readeflags()&FL_IF)
@@ -564,33 +565,34 @@ procdump(void)
     cprintf("\n");
   }
 }
+
 // returns the victim proc
-struct proc * victim_proc()
+struct proc *victim_proc()
 {
-struct proc *p = 0;
-struct proc *vict=p;
-for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  struct proc *p = 0;
+  struct proc *vict = p;
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
-    if(p->state == UNUSED) // only runnable and running processes can be choosen as victim
+    if (p->state == UNUSED) // only runnable and running processes can be choosen as victim
       continue;
-    if((p->rss > vict->rss )|| ((p->rss == vict->rss ) && (p->pid < vict->pid)))
+    if ((p->rss > vict->rss) || ((p->rss == vict->rss) && (p->pid < vict->pid)))
     {
-      vict=p;
+      vict = p;
     }
   }
-//    cprintf("no victim proc found in vict proc \n");
-if(p==0)
-panic("no victim process found");
+  //    cprintf("no victim proc found in vict proc \n");
+  if (p == 0)
+    panic("no victim process found");
   return vict;
 }
 
-// void unaccessed (void)
-// {struct proc *p = 0;
-// for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+// void unaccessed(void)
+// {
+//   struct proc *p = 0;
+//   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
 //   {
-//     if(p->state == UNUSED)
+//     if (p->state == UNUSED)
 //       continue;
 //     unacc_proc(p->pgdir);
 //   }
 // }
-

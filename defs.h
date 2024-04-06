@@ -93,17 +93,13 @@ void            end_op();
 extern int      ismp;
 void            mpinit(void);
 
-//pageswap.c
+// pageswap.c
 
 void swaparrayinit(int);
-struct swap_slot* swapalloc(void);
+struct swap_slot *swapalloc(void);
 void swapfree(int, int);
 void swap_out(void);
-void swap_out_page(pte_t* , uint, int);
-
-
-
-
+void swap_out_page(pte_t *, uint, int);
 void swap_in_page();
 
 // picirq.c
@@ -202,9 +198,9 @@ void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
-pte_t *   find_victim_page(pde_t*);
+pte_t*          find_victim_page(pde_t *);
 void            unacc_proc(pde_t *);
- pte_t *       walkpgdir(pde_t *, const void *, int);
+pte_t*          walkpgdir(pde_t *, const void *, int);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

@@ -161,9 +161,9 @@ struct gatedesc {
 };
 struct victim_page
 {
-    int available;
-    pte_t* pt_entry;
-    char* va_start;
+  int available;
+  pte_t *pt_entry;
+  char *va_start;
 };
 // Set up a normal interrupt/trap gate descriptor.
 // - istrap: 1 for a trap (= exception) gate, 0 for an interrupt gate.
