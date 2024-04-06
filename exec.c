@@ -68,7 +68,7 @@ exec(char *path, char **argv)
   sz = PGROUNDUP(sz);
   if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)
     goto bad;
-  new_rss += (PGROUNDUP(sz + 2 * PGSIZE) - PGROUNDUP(sz)) * PGSIZE;
+  new_rss += (PGROUNDUP(sz + 2 * PGSIZE) - PGROUNDUP(sz)) ;
   clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
   sp = sz;
 

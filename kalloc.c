@@ -93,7 +93,7 @@ kfree(char *v)
 char*
 kalloc(void)
 {
-  cprintf("in kalloc before swapout %d \n ", kmem.num_free_pages);
+  // cprintf("in kalloc before swapout %d \n ", kmem.num_free_pages);
   struct run *r;
   // if(kmem.num_free_pages<=1000)
   // {// swapp out then
@@ -103,13 +103,13 @@ kalloc(void)
 
   while(!kmem.freelist)
   {
-    cprintf("before swapout \n");
+    // cprintf("before swapout \n");
     swap_out();
   }
   if(kmem.use_lock)
     acquire(&kmem.lock);
   r = kmem.freelist;
-  cprintf("inside kalloc after swapout %d \n ", kmem.num_free_pages);
+  // cprintf("inside kalloc after swapout %d \n ", kmem.num_free_pages);
   if(r)
   {
     kmem.freelist = r->next;

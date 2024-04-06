@@ -177,7 +177,7 @@ growproc(int n)
       return -1;
   }
   curproc->sz = sz;
-  curproc->rss += (PGROUNDUP(sz + n) - PGROUNDUP(sz)) * PGSIZE;
+  curproc->rss += (PGROUNDUP(sz + n) - PGROUNDUP(sz));
   switchuvm(curproc);
   return 0;
 }
@@ -243,7 +243,7 @@ exit(void)
   struct proc *p;
   int fd;
 
-  cprintf("here in exit 1 \n");
+  // cprintf("here in exit 1 \n");
   if(curproc == initproc)
     panic("init exiting");
 
@@ -254,7 +254,7 @@ exit(void)
       curproc->ofile[fd] = 0;
     }
   }
-  cprintf("here in exit 2 \n");
+  // cprintf("here in exit 2 \n");
   begin_op();
   iput(curproc->cwd);
   end_op();
@@ -264,7 +264,7 @@ exit(void)
 
   // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
-  cprintf("here in exit 3 \n");
+  // cprintf("here in exit 3 \n");
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == curproc){
@@ -273,7 +273,7 @@ exit(void)
         wakeup1(initproc);
     }
   }
-  cprintf("here in exit 4 \n");
+  // cprintf("here in exit 4 \n");
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
   sched();
@@ -570,18 +570,18 @@ procdump(void)
 struct proc *victim_proc()
 {
   struct proc *p = 0;
-  struct proc *vict = p;
+  struct proc *vict = ptable.proc;
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
     if (p->state == UNUSED) // only runnable and running processes can be choosen as victim
       continue;
-    if ((p->rss > vict->rss) || ((p->rss == vict->rss) && (p->pid < vict->pid)))
+    if ((vict->state==UNUSED)||(p->rss > vict->rss) || ((p->rss == vict->rss) && (p->pid < vict->pid)))
     {
       vict = p;
     }
   }
   //    cprintf("no victim proc found in vict proc \n");
-  if (p == 0)
+  if (vict->state==UNUSED)
     panic("no victim process found");
   return vict;
 }

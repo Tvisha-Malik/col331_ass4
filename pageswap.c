@@ -116,7 +116,7 @@ void swap_out_page(pte_t *vp, uint blockno, int dev)
     // rss proc set in swap out
     kfree(P2V(physicalAddress));
 
-    cprintf("printing va: %d\n", P2V(physicalAddress));
+    // cprintf("printing va: %d\n", P2V(physicalAddress));
     // frees the page in memory but the rrs has already been decreased so no need to decrease here
 }
 void disk_read(uint dev, char *page, int block)
@@ -153,7 +153,7 @@ void disk_read(uint dev, char *page, int block)
 
 void swap_in_page()
 {
-    cprintf("inside swap in \n");
+    // cprintf("inside swap in \n");
 
     struct proc *p = myproc();
     uint vpage = rcr2();

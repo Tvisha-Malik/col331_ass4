@@ -293,7 +293,7 @@ void freevm(pde_t *pgdir)
   if (pgdir == 0)
     panic("freevm: no pgdir");
   deallocuvm(pgdir, KERNBASE, 0);
-  cprintf("after dealloc \n");
+  // cprintf("after dealloc \n");
   for (i = 0; i < NPDENTRIES; i++)
   {
     if (pgdir[i] & PTE_P)
@@ -302,7 +302,7 @@ void freevm(pde_t *pgdir)
       kfree(v);
     }
   }
-  cprintf("after loop in freeuvm \n");
+  // cprintf("after loop in freeuvm \n");
   kfree((char *)pgdir);
 }
 
