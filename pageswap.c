@@ -116,31 +116,35 @@ void disk_read(uint dev, char *page, int block){
 }
 
 
- pte_t *
-walkpgdir2(pde_t *pgdir, const void *va)
-{
-  pde_t *pde;
-  pte_t *pgtab;
+//  pte_t *
+// walkpgdir2(pde_t *pgdir, const void *va)
+// {
+//   pde_t *pde;
+//   pte_t *pgtab;
 
-  pde = &pgdir[PDX(va)];
-  if (!(*pde & PTE_P))
-  {
-		panic("idk");
-		return 0;
-  }
-	pgtab = (pte_t *)P2V(PTE_ADDR(*pde));
-  return &pgtab[PTX(va)];
-}
+//   pde = &pgdir[PDX(va)];
+//   if (!(*pde & PTE_P))
+//   {
+// 		panic("idk");
+// 		return 0;
+//   }
+// 	pgtab = (pte_t *)P2V(PTE_ADDR(*pde));
+//   return &pgtab[PTX(va)];
+// }
 
 void swap_in_page(){
     cprintf("inside swap in \n");
     uint vpage = rcr2();
     struct proc* p=myproc();
     /* from vm.c*/
-    pte_t*  pgdir_adr =  walkpgdir2(p->pgdir, (char*) vpage);
+    pte_t*  pgdir_adr =  walkpgdir(p->pgdir, (void*) vpage,0);
 		// cprintf("pgdir_adr: %d\n", pgdir_adr);
-    if(!pgdir_adr || (*pgdir_adr & PTE_P)){
-        panic("Invalid page fault");
+    if(!pgdir_adr ){
+        panic("Invalid page fault zero");
+        return;
+    }
+     if((*pgdir_adr & PTE_P)){
+        panic("Invalid page fault present");
         return;
     }
     uint block_id = (*pgdir_adr>>12);

@@ -72,7 +72,7 @@ kfree(char *v)
   struct run *r;
 
   if((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
-    panic("kfree");
+    panic("kfree 1");
 
   // Fill with junk to catch dangling refs.
   memset(v, 1, PGSIZE);
@@ -95,13 +95,18 @@ kalloc(void)
 {
    cprintf("in kalloc before swapout %d \n ", kmem.num_free_pages);
   struct run *r;
-  if(kmem.num_free_pages<=1000)
-  {// swapp out then
-  cprintf("before swapout \n");
-  swap_out();// finds the victim proc and page, swaps it out
+  // if(kmem.num_free_pages<=1000)
+  // {// swapp out then
+  // cprintf("before swapout \n");
+  // swap_out();// finds the victim proc and page, swaps it out
 
+  // }
+
+  while(!kmem.freelist)
+  {
+     cprintf("before swapout \n");
+    swap_out();
   }
-
   if(kmem.use_lock)
     acquire(&kmem.lock);
   r = kmem.freelist;
