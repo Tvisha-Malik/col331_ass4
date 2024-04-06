@@ -171,14 +171,15 @@ void swap_in_page(){
     p->rss +=PGSIZE;
     disk_read(ROOTDEV,phy_page,(int)block_id);
 
-    int cal_slot = (block_id-2)/8;
-    struct swap_slot get_slot = swap_array[cal_slot];
-    *pgdir_adr |= get_slot.page_perm;
-    *pgdir_adr |= V2P(phy_page);
-    *pgdir_adr |= PTE_P;
-    get_slot.is_free = 1;
+    // int cal_slot = (block_id-2)/8;
+    // struct swap_slot get_slot = swap_array[cal_slot];
+    // *pgdir_adr |= get_slot.page_perm;
+    // *pgdir_adr |= V2P(phy_page);
+    // *pgdir_adr |= PTE_P;
+    *pgdir_adr= V2P(phy_page)|PTE_FLAGS(*pgdir_adr)|PTE_P;
+    *pgdir_adr=*pgdir_adr&(~PTE_SO);
     
-    // swapfree(ROOTDEV,block_id);
+    swapfree(ROOTDEV,block_id);
 }
 
 
