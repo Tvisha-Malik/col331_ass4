@@ -280,6 +280,11 @@ int deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       kfree(v);
       *pte = 0;
     }
+    else if (((*pte & PTE_P) == 0) && ((*pte & PTE_SO)!=0))
+    {
+       uint block_id = (*pte >> PTXSHIFT);
+       swapfree(ROOTDEV, block_id);
+    }
   }
   return newsz;
 }

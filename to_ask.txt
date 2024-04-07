@@ -1,0 +1,5 @@
+- state of id 4 being is sometimes 2 sometimes 3.
+- FSSIZE changed, why assert in balloc.
+- difference of 4 rss 
+to do 
+- clean swap slots (only user pages swapped out)
