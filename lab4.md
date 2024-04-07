@@ -62,6 +62,26 @@ There are two test cases for this assignment. Currently both the testcases would
   ((P)) id: 3, state: 2, rss: 679936
   ((P)) id: 4, state: 4, rss: 679936
   MemTest2 Passed!
+
+**************
+Corrected:
+**************
+memtest2
+Forked pid: Forked pid: 0
+4
+Parent alloc-ed:
+PrintingRSS
+((P)) id: 1, state: 2, rss: 3 (12288)
+((P)) id: 2, state: 2, rss: 5 (20480)
+((P)) id: 3, state: 4, rss: 350 (1433600)
+((P)) id: 4, state: 2, rss: 238 (974848)
+Child alloc-ed
+PrintingRSS
+((P)) id: 1, state: 2, rss: 3 (12288)
+((P)) id: 2, state: 2, rss: 5 (20480)
+((P)) id: 3, state: 2, rss: 340 (1392640)
+((P)) id: 4, state: 4, rss: 341 (1396736)
+Memory OKKKK
   ```
 
   Here the resident size of the parent process should decrease as shown in the above output (for process with pid 3).

@@ -69,13 +69,13 @@ void swap_out(void)
 {
     struct proc *v_proc = victim_proc();
     // cprintf("after victim proc in swapout \n");
-    pte_t *v_page = find_victim_page(v_proc->pgdir);
+    pte_t *v_page = find_victim_page(v_proc->pgdir, v_proc->sz);
     // cprintf("before if in swapout \n");
     if (v_page == 0)
     {
         // unaccessed(); we only have to set 10% of the accessed entries as unaccesed for the victim process
         unacc_proc(v_proc->pgdir);
-        v_page = find_victim_page(v_proc->pgdir);
+        v_page = find_victim_page(v_proc->pgdir, v_proc->sz);
     }
     // cprintf("after if in swapout \n");
     if (v_page == 0)

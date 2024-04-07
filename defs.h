@@ -198,7 +198,7 @@ void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
-pte_t*          find_victim_page(pde_t *);
+pte_t*          find_victim_page(pde_t *, uint);
 void            unacc_proc(pde_t *);
 pte_t*          walkpgdir(pde_t *, const void *, int);
 

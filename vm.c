@@ -406,12 +406,12 @@ int copyout(pde_t *pgdir, uint va, void *p, uint len)
 
 // given a pgdir, find a page with pte_p set and pte_a unset
 // might have to change the return type
-pte_t *find_victim_page(pde_t *pgdir)
+pte_t *find_victim_page(pde_t *pgdir, uint sz)
 {
   pte_t *pgtab;
   pde_t *pde;
   pte_t *victim;
-  for (uint i = 4096; i < KERNBASE; i += PGSIZE)
+  for (uint i = 0; i < sz; i += PGSIZE)
   {
     pde = &pgdir[PDX(i)];
     if (*pde & PTE_P)
