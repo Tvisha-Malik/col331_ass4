@@ -89,7 +89,7 @@ void swap_out(void)
 
 void swap_out_page(pte_t *vp, uint blockno, int dev)
 {
-    cprintf("vicitm page is %d \n", *vp);
+    // cprintf("vicitm page is %d \n", *vp);
     uint physicalAddress = PTE_ADDR(*vp);
     char *va = (char *)P2V(physicalAddress);
     struct buf *buffer;
@@ -110,12 +110,11 @@ void swap_out_page(pte_t *vp, uint blockno, int dev)
     }
     *vp = ((blockno << 12) | PTE_FLAGS(*vp) | PTE_SO);
     *vp = *vp & (~PTE_P); // setting the top 20 bits as the block number, setting the present bit as unset and the swapped out bit as set
-    cprintf("after update in swap out  %d \n", *vp);
+    // cprintf("after update in swap out  %d \n", *vp);
     // *vp.pt_entry = (*vp.pt_entry & 0x000000);
     // *vp.pt_entry = ((blockno << 12) | PTE_SO);
     // *vp.pt_entry = *vp.pt_entry & (~PTE_P);
     // invlpg((void *)va); // invalidating the tlb entry
-    // rss proc set in swap out
     kfree(P2V(physicalAddress));
 
     // cprintf("printing va: %d\n", P2V(physicalAddress));
@@ -163,7 +162,7 @@ void swap_in_page()
     /* from vm.c*/
     pte_t *pgdir_adr = walkpgdir(p->pgdir, (void *)vpage, 0);
     // cprintf("pgdir_adr: %d\n", pgdir_adr);
-    cprintf("after walk in swap in  %d \n", *pgdir_adr);
+    // cprintf("after walk in swap in  %d \n", *pgdir_adr);
     if (!pgdir_adr)
     {
         panic("Invalid page fault zero");
@@ -191,7 +190,7 @@ void swap_in_page()
     // *pgdir_adr |= PTE_P;
     *pgdir_adr = V2P(phy_page) | PTE_FLAGS(*pgdir_adr) | PTE_P;
     *pgdir_adr = *pgdir_adr & (~PTE_SO);
-    cprintf("after update in swap in  %d \n", *pgdir_adr);
+    // cprintf("after update in swap in  %d \n", *pgdir_adr);
 
     swapfree(ROOTDEV, block_id);
 }

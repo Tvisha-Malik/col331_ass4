@@ -18,7 +18,6 @@ exec(char *path, char **argv)
   struct proghdr ph;
   pde_t *pgdir, *oldpgdir;
   struct proc *curproc = myproc();
-  int new_rss = 0;
 
   begin_op();
 
@@ -38,7 +37,6 @@ exec(char *path, char **argv)
 
   if((pgdir = setupkvm()) == 0)// one page for the new process
     goto bad;
-  new_rss += PGSIZE;
 
   // Load program into memory.
   sz = 0;
@@ -53,7 +51,6 @@ exec(char *path, char **argv)
       goto bad;
     if((sz = allocuvm(pgdir, sz, ph.vaddr + ph.memsz)) == 0)
       goto bad;
-    new_rss += (PGROUNDUP(ph.vaddr + ph.memsz) - PGROUNDUP(sz));
     if(ph.vaddr % PGSIZE != 0)
       goto bad;
     if(loaduvm(pgdir, (char*)ph.vaddr, ip, ph.off, ph.filesz) < 0)
@@ -68,7 +65,6 @@ exec(char *path, char **argv)
   sz = PGROUNDUP(sz);
   if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)
     goto bad;
-  new_rss += (PGROUNDUP(sz + 2 * PGSIZE) - PGROUNDUP(sz)) ;
   clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
   sp = sz;
 
@@ -103,14 +99,13 @@ exec(char *path, char **argv)
   curproc->sz = sz;
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
-  curproc->rss = new_rss;
   switchuvm(curproc);
-  freevm(oldpgdir); 
+  freevm(oldpgdir,1); 
   return 0;
 
  bad:
   if(pgdir)
-    freevm(pgdir);
+    freevm(pgdir,1);
   if(ip){
     iunlockput(ip);
     end_op();

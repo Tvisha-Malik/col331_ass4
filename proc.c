@@ -125,15 +125,15 @@ userinit(void)
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
 
-  p = allocproc();// sets up kstack, rss updated for it
+  p = allocproc();
   //one page
   initproc = p;
-  if((p->pgdir = setupkvm()) == 0)// one kalloc thus rss++
+  if((p->pgdir = setupkvm()) == 0)
     panic("userinit: out of memory?");
-  p->rss += PGSIZE; // for the page directory
+ // for the page directory
   // 2 pages in memory
   inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
-  p->rss += 2 * PGSIZE; // one due to the code and the other one is the page table
+   // one due to the code and the other one is the page table
   // total 4 pages in memory- page table, page directory, one page for the code and kernel stack
   p->sz = PGSIZE;
   memset(p->tf, 0, sizeof(*p->tf));
@@ -173,11 +173,11 @@ growproc(int n)
     if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
       return -1;
   } else if(n < 0){
-    if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
+    if((sz = deallocuvm(curproc->pgdir, sz, sz + n, 1)) == 0)
       return -1;
   }
   curproc->sz = sz;
-  curproc->rss += (PGROUNDUP(sz + n) - PGROUNDUP(sz));
+ 
   switchuvm(curproc);
   return 0;
 }
@@ -198,7 +198,7 @@ fork(void)
   }
 
   // Copy process state from proc.
-  if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
+  if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz, np)) == 0){
     kfree(np->kstack); // incase of error
     np->kstack = 0;
     np->state = UNUSED;
@@ -222,7 +222,7 @@ fork(void)
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
   pid = np->pid;
-  np->rss = curproc->rss; // setting the rss of the child same as the rss of the parent
+  
 
   acquire(&ptable.lock);
 
@@ -304,7 +304,7 @@ wait(void)
         //clean_slots(pid);// to clean up the slots of the killed process
         kfree(p->kstack);
         p->kstack = 0;
-        freevm(p->pgdir);
+        freevm(p->pgdir,0);
         p->pid = 0;
         p->parent = 0;
         p->name[0] = 0;

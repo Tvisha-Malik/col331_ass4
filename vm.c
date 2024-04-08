@@ -136,7 +136,7 @@ setupkvm(void)
     if (mappages(pgdir, k->virt, k->phys_end - k->phys_start,
                  (uint)k->phys_start, k->perm) < 0)
     {
-      freevm(pgdir);
+      freevm(pgdir,1);
       return 0;
     }
   return pgdir;
@@ -225,6 +225,7 @@ int allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
   char *mem;
   uint a;
+  struct proc* curproc= myproc();
 
   if (newsz >= KERNBASE)
     return 0;
@@ -238,14 +239,15 @@ int allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
     if (mem == 0)
     {
       cprintf("allocuvm out of memory\n");
-      deallocuvm(pgdir, newsz, oldsz);
+      deallocuvm(pgdir, newsz, oldsz,1);
       return 0;
     }
     memset(mem, 0, PGSIZE);
+    curproc->rss+=PGSIZE;
     if (mappages(pgdir, (char *)a, PGSIZE, V2P(mem), PTE_W | PTE_U) < 0)
     {
       cprintf("allocuvm out of memory (2)\n");// in case of error
-      deallocuvm(pgdir, newsz, oldsz);
+      deallocuvm(pgdir, newsz, oldsz,1);
       kfree(mem);
       return 0;
     }
@@ -257,10 +259,11 @@ int allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 // newsz.  oldsz and newsz need not be page-aligned, nor does newsz
 // need to be less than oldsz.  oldsz can be larger than the actual
 // process size.  Returns the new process size.
-int deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
+int deallocuvm(pde_t *pgdir, uint oldsz, uint newsz, int rss_update)
 {
   pte_t *pte;
   uint a, pa;
+ struct proc* curproc = myproc();
 
   if (newsz >= oldsz)
     return oldsz;
@@ -279,10 +282,13 @@ int deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       char *v = P2V(pa);
       kfree(v);
       *pte = 0;
+      if(rss_update)
+      curproc->rss-=PGSIZE;
     }
     else if (((*pte & PTE_P) == 0) && ((*pte & PTE_SO)!=0))
     {
        uint block_id = (*pte >> PTXSHIFT);
+       *pte=*pte&(~PTE_SO);
        swapfree(ROOTDEV, block_id);
     }
   }
@@ -291,13 +297,13 @@ int deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 
 // Free a page table and all the physical memory pages
 // in the user part.
-void freevm(pde_t *pgdir)
+void freevm(pde_t *pgdir, int update_rss)
 {
   uint i;
 
   if (pgdir == 0)
     panic("freevm: no pgdir");
-  deallocuvm(pgdir, KERNBASE, 0);
+  deallocuvm(pgdir, KERNBASE, 0,update_rss);
   // cprintf("after dealloc \n");
   for (i = 0; i < NPDENTRIES; i++)
   {
@@ -326,7 +332,7 @@ void clearpteu(pde_t *pgdir, char *uva)
 // Given a parent process's page table, create a copy
 // of it for a child.
 pde_t *
-copyuvm(pde_t *pgdir, uint sz)
+copyuvm(pde_t *pgdir, uint sz ,struct proc* curproc)
 {
   pde_t *d;
   pte_t *pte;
@@ -345,9 +351,8 @@ copyuvm(pde_t *pgdir, uint sz)
     pa = PTE_ADDR(*pte);
     flags = PTE_FLAGS(*pte);
     if ((mem = kalloc()) == 0)// a new page for the content
-    // 1 page for each page in the original process
       goto bad;
-    
+    curproc->rss+=PGSIZE;
     memmove(mem, (char *)P2V(pa), PGSIZE);// copy the page data
     if (mappages(d, (void *)i, PGSIZE, V2P(mem), flags) < 0)// add the entries in page directory and page table
     { //page table pages allocated if necessary
@@ -359,7 +364,7 @@ copyuvm(pde_t *pgdir, uint sz)
   return d;
 
 bad:
-  freevm(d);
+  freevm(d,1);
   return 0;
 }
 
